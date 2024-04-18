@@ -4,7 +4,7 @@ const dbConnect = require("./config/dbConnect");
 const { UserNotFound, errorHandler } = require("./middlewares/errorHandling");
 const app = express();
 const path = require("path");
-const cors = require("cors")
+
 const PORT = process.env.PORT || 4000;
 const userRouter = require("./routes/userRoutes");
 const authRouter = require("./routes/authRoutes");
@@ -24,20 +24,14 @@ app.use(morgan("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-// const cors = require("cors");
-//  const corsOption = {
-//   origin: ["https://atomcreations.co"],
-//   credentials: true,
-//   methods: ["GET", "POST", "PUT", "DELETE"],
-// };
-const corsOptions = {
+const cors = require("cors");
+const corsOption = {
+  origin: ["http://localhost:3000"],
   credentials: true,
-  // origin: "*",
-  origin: "http://localhost:3000",
-  methods: ["GET", "POST"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  methods: ["GET", "POST", "PUT", "DELETE"],
 };
-app.use(cors());
+
+app.use(cors(corsOption));
 
 app.use("/api/user", authRouter);
 app.use("/api/appuser", userRouter);

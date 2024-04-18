@@ -651,7 +651,7 @@ const forgotPasswordToken = asyncHandler(async (req, res) => {
   try {
     const token = await user.createPasswordResetToken();
     await user.save();
-    const resetURL = `Hi, Follow this link to reset your Password. This link will be valid for 10 minutes from now. <a href='https://atombackend.vercel.app/api/user/reset-password/${token}'>Click Here</>`;
+    const resetURL = `Hi, Follow this link to reset your Password. This link will be valid for 10 minutes from now. <a href='http://localhost:8080/api/user/reset-password/${token}'>Click Here</>`;
     const data = {
       to: email,
       text: "Hey!!",
