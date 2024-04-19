@@ -3,14 +3,31 @@ asyncHandler = require("express-async-handler");
 
 const sendEmail = asyncHandler(async (data, req, res) => {
   const transporter = nodemailer.createTransport({
-    host: "smtpout.secureserver.net",
-    port: 465,
+    // host: "smtpout.secureserver.net",
+    // port: 465,
+    service:"gmail",
     secure: true, // Use `true` for port 465, `false` for all other ports
     auth: {
       user: process.env.MAIL_ID,
       pass: process.env.MAIL_PASS,
     },
+  // const transporter = nodemailer.createTransport({    
+  //   host: "smtpout.secureserver.net",  
+  //   secure: true,
+  //   secureConnection: false, // TLS requires secureConnection to be false
+  //   tls: {
+  //       ciphers:'SSLv3'
+  //   },
+  //   requireTLS:true,
+  //   port: 465,
+  //   debug: true,
+  //   auth: {
+  //         user: process.env.MAIL_ID,
+  //         pass: process.env.MAIL_PASS,
+  //       },
+
   });
+  
 
   let info = await transporter.sendMail({
     from: `"Atom Creations" <${process.env.MAIL_ID}>`, // sender address

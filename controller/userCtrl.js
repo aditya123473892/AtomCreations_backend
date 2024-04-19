@@ -11,22 +11,58 @@ const jwt = require("jsonwebtoken");
 const sendEmail = require("../controller/emailCtrl");
 const crypto = require("crypto");
 const { sendJwt } = require("../utils/sendJWT");
-
+const otpGenerate = require("./sendotpCtrl");
 //register
 
-const createUser = asyncHandler(async (req, res) => {
+const sendOtp = asyncHandler(async (req, res) => {
   const email = req.body.email;
   try {
-    const findUser = await Userdb.findOne({ email: email });
+    // const findUser = await Userdb.findOne({ email: email });
+    const otp = otpGenerate();
+    console.log(otp);
+    
+    const data = {
+      to: email,
+      text: `Verify your email.. OTP is ${otp}`,
+      subject: "OTP Verification",
+      htm: `Please verify your email address. <br> OTP IS ${otp}`,
+    };
+    sendEmail(data);
+    console.log(data);
+    // const newUser = await Userdb.create(req.body);
+    const newUser = await Userdb.create({
+      ...req.body,
+      otp: otp,
+    });
 
-    if (!findUser) {
-      const newUser = await Userdb.create(req.body);
-      sendJwt(res, newUser, `User created`);
-      // res.json(newUser);
-      // res.json(newUser);
-    } else {
-      throw new Error("User Already Exists");
+    sendJwt(res, newUser, `User created`);
+    res.json(newUser);
+
+    res.json(otp);
+    // res.json({message:"mail sent"})
+    // res.json(newUser);
+  } catch (error) {
+    res.status(500).json({
+      msg: "Internal Server Error",
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+const verifyOtp = asyncHandler(async (req, res) => {
+  const { email, otp } = req.body;
+  try {
+    const user = await Userdb.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ error: "User not present" });
     }
+    if (user.otp !== otp) {
+      return res.status(400).json({ success: false, message: "Invalid OTP" });
+    }
+    user.isVerified = true;
+    await user.save();
+    res.json({ success: true, message: "Email verified successfully" });
   } catch (error) {
     res.status(500).json({
       msg: "Internal Server Error",
@@ -643,14 +679,14 @@ const updatePassword = asyncHandler(async (req, res) => {
 
 const forgotPasswordToken = asyncHandler(async (req, res) => {
   const { email } = req.body;
-  const user = await Userdb.findOne({ email: email });
-  console.log(user);
-  if (!user) {
-    throw new Error("User not found");
-  }
+  // const user = await Userdb.findOne({ email: email });
+  // console.log(user);
+  // if (!user) {
+  //   throw new Error("User not found");
+  // }
   try {
-    const token = await user.createPasswordResetToken();
-    await user.save();
+    const token = "abcd";
+    // await user.save();
     const resetURL = `Hi, Follow this link to reset your Password. This link will be valid for 10 minutes from now. <a href='http://localhost:8080/api/user/reset-password/${token}'>Click Here</>`;
     const data = {
       to: email,
@@ -713,7 +749,7 @@ const applyCoupon = asyncHandler(async (req, res) => {
 });
 
 module.exports = {
-  createUser,
+  sendOtp,
   loginUserCtrl,
   logout,
   getAllUsers,
@@ -734,4 +770,5 @@ module.exports = {
   removeFromCart,
   placeOrder,
   applyCoupon,
+  verifyOtp
 };
