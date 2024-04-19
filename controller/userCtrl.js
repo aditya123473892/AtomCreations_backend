@@ -17,28 +17,51 @@ const otpGenerate = require("./sendotpCtrl");
 const sendOtp = asyncHandler(async (req, res) => {
   const email = req.body.email;
   try {
-    // const findUser = await Userdb.findOne({ email: email });
-    const otp = otpGenerate();
-    console.log(otp);
-    
-    const data = {
-      to: email,
-      text: `Verify your email.. OTP is ${otp}`,
-      subject: "OTP Verification",
-      htm: `Please verify your email address. <br> OTP IS ${otp}`,
-    };
-    sendEmail(data);
-    console.log(data);
+    const findUser = await Userdb.findOne({ email: email });
+    if (findUser && findUser.isVerified) {
+      throw new Error("User Already Exists");
+    } else if (findUser && !findUser.isVerified) {
+      const otp = otpGenerate();
+      console.log(otp);
+
+      const data = {
+        to: email,
+        text: `Verify your email.. OTP is ${otp}`,
+        subject: "OTP Verification",
+        htm: `Please verify your email address. <br> OTP IS ${otp}`,
+      };
+      sendEmail(data);
+      console.log(data);
+      
+      findUser.otp = otp
+      await findUser.save()
+      res.json(findUser)
+      res.json(otp);
+
+    } else {
+      const otp = otpGenerate();
+      console.log(otp);
+
+      const data = {
+        to: email,
+        text: `Verify your email.. OTP is ${otp}`,
+        subject: "OTP Verification",
+        htm: `Please verify your email address. <br> OTP IS ${otp}`,
+      };
+      sendEmail(data);
+      const newUser = await Userdb.create({
+        ...req.body,
+        otp: otp,
+      });
+
+      sendJwt(res, newUser, `User created`);
+      res.json(newUser);
+
+      res.json(otp);
+    }
+
     // const newUser = await Userdb.create(req.body);
-    const newUser = await Userdb.create({
-      ...req.body,
-      otp: otp,
-    });
 
-    sendJwt(res, newUser, `User created`);
-    res.json(newUser);
-
-    res.json(otp);
     // res.json({message:"mail sent"})
     // res.json(newUser);
   } catch (error) {
@@ -49,6 +72,55 @@ const sendOtp = asyncHandler(async (req, res) => {
     });
   }
 });
+
+// const sendOtp = asyncHandler(async (req, res) => {
+//   const email = req.body.email;
+//   try {
+//     const findUser = await Userdb.findOne({ email: email });
+//     if (findUser) {
+//       if (findUser.isVerified) {
+//         throw new Error("User Already Exists");
+//       } else {
+        
+//         const otp = otpGenerate();
+//         console.log(otp);
+//         const data = {
+//           to: email,
+//           text: `Verify your email.. OTP is ${otp}`,
+//           subject: "OTP Verification",
+//           htm: `Please verify your email address. <br> OTP IS ${otp}`,
+//         };
+//         user.otp = otp
+//         sendEmail(data);
+//         // user.otp = otp
+//         res.json(otp);
+//       }
+//     } else {
+//       // User does not exist, create user with OTP and send email
+//       const otp = otpGenerate();
+//       console.log(otp);
+//       const data = {
+//         to: email,
+//         text: `Verify your email.. OTP is ${otp}`,
+//         subject: "OTP Verification",
+//         htm: `Please verify your email address. <br> OTP IS ${otp}`,
+//       };
+//       sendEmail(data);
+//       const newUser = await Userdb.create({
+//         ...req.body,
+//         otp: otp,
+//       });
+//       sendJwt(res, newUser, `User created`);
+//       res.json(newUser);
+//     }
+//   } catch (error) {
+//     res.status(500).json({
+//       msg: "Internal Server Error",
+//       success: false,
+//       error: error.message,
+//     });
+//   }
+// });
 
 const verifyOtp = asyncHandler(async (req, res) => {
   const { email, otp } = req.body;
@@ -76,7 +148,11 @@ const verifyOtp = asyncHandler(async (req, res) => {
 const loginUserCtrl = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
   const findUser = await Userdb.findOne({ email: email });
-  if (findUser && (await findUser.isPasswordMatched(password))) {
+  if (
+    findUser &&
+    findUser.isVerified &&
+    (await findUser.isPasswordMatched(password))
+  ) {
     // const refreshToken = await generateRefeshToken(findUser?._id);
     // const updateUser = await Userdb.findByIdAndUpdate(
     //     findUser._id,
@@ -770,5 +846,5 @@ module.exports = {
   removeFromCart,
   placeOrder,
   applyCoupon,
-  verifyOtp
+  verifyOtp,
 };
