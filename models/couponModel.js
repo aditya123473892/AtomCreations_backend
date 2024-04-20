@@ -1,11 +1,10 @@
 const mongoose = require('mongoose'); 
 
 var couponSchema = new mongoose.Schema({
-    name:{
+    code:{
         type:String,
         required:true,
-        unique:true,
-        uppercase:true,
+        unique:true
     },
     expiry:{
         type:Date,

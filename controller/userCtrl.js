@@ -32,12 +32,11 @@ const sendOtp = asyncHandler(async (req, res) => {
       };
       sendEmail(data);
       console.log(data);
-      
-      findUser.otp = otp
-      await findUser.save()
-      res.json(findUser)
-      res.json(otp);
 
+      findUser.otp = otp;
+      await findUser.save();
+      res.json(findUser);
+      res.json(otp);
     } else {
       const otp = otpGenerate();
       console.log(otp);
@@ -81,7 +80,7 @@ const sendOtp = asyncHandler(async (req, res) => {
 //       if (findUser.isVerified) {
 //         throw new Error("User Already Exists");
 //       } else {
-        
+
 //         const otp = otpGenerate();
 //         console.log(otp);
 //         const data = {
@@ -133,6 +132,7 @@ const verifyOtp = asyncHandler(async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid OTP" });
     }
     user.isVerified = true;
+    sendJwt(res, user, `User found`);
     await user.save();
     res.json({ success: true, message: "Email verified successfully" });
   } catch (error) {
@@ -529,93 +529,6 @@ const decreaseQuantity = asyncHandler(async (req, res) => {
     });
   }
 });
-// const placeOrder = asyncHandler(async (req, res) => {
-//     const { token } = req.cookies;
-//     const decoded = jwt.verify(token, process.env.JWT_KEY);
-//     req.user = await Userdb.findById(decoded._id);
-//     const { id } = req.user;
-//     validateMongooseId(id);
-//     try {
-//         const user = req.user;
-//         console.log(user);
-//         if (!user) {
-//             return res.status(404).json({ error: "User not found" });
-//         }
-//         const data = req.body;
-//         const {
-//             address,
-//             city,
-//             phoneNo,
-//             postalCode,
-//             country,
-//             orderItems,
-//             paymentInfo,
-//         } = data;
-//         if (
-//             !address ||
-//             !city ||
-//             !phoneNo ||
-//             !postalCode ||
-//             !country ||
-//             !orderItems ||
-//             !paymentInfo
-//         ) {
-//             return res.status(400).json({
-//                 msg: "Complete all fields",
-//                 success: false,
-//             });
-//         }
-
-//         const finalItems = orderItems.map((item) => ({
-//             product: item.productId,
-//             quantity: item.quantity,
-//         }));
-//         console.log(orderItems);
-
-//         // const totalPrice = calcPrice(orderItems);
-//         const products = [];
-//         for (const item of newOrder.orderItems) {
-//             const product = await Productdb.findById(item.product);
-//             if (product) {
-//                 products.push(product);
-//             }
-//         }
-//         console.log(products);
-//         const totalPrice = orderItems.reduce((total, item) => {
-//             // console.log(item);
-//             const myItemId = Object.keys(item);
-//             console.log(myItemId);
-//             return total + (item.quantity * item.productId.price || 0);
-//         }, 0);
-
-//         const newOrder = new Orderdb({
-//             shippingInfo: { address, city, phoneNo, postalCode, country },
-//             user: user._id,
-//             orderItems: finalItems,
-//             paymentInfo: { ...paymentInfo, totalPrice },
-//         });
-
-//         await newOrder.save();
-
-//         for (const item of newOrder.orderItems) {
-//             const product = await Productdb.findById(item.product);
-//             if (product) {
-//                 products.push(product);
-//             }
-//         }
-//         res.status(201).json({
-//             msg: "Order created",
-//             success: true,
-//             data: newOrder,
-//         });
-//     } catch (error) {
-//         res.status(500).json({
-//             msg: "Internal Server Error",
-//             success: false,
-//             error: error.message,
-//         });
-//     }
-// });
 const placeOrder = asyncHandler(async (req, res) => {
   const { id } = req.user;
   validateMongooseId(id);
@@ -631,25 +544,9 @@ const placeOrder = asyncHandler(async (req, res) => {
     }
 
     const data = req.body;
-    const {
-      address,
-      city,
-      phoneNo,
-      postalCode,
-      country,
-      orderItems,
-      paymentInfo,
-    } = data;
+    const { address, city, phoneNo, pinCode, state, orderItems } = data;
 
-    if (
-      !address ||
-      !city ||
-      !phoneNo ||
-      !postalCode ||
-      !country ||
-      !orderItems ||
-      !paymentInfo
-    ) {
+    if (!address || !city || !phoneNo || !pinCode || !state || !orderItems) {
       return res
         .status(400)
         .json({ msg: "Complete all fields", success: false });
@@ -668,19 +565,32 @@ const placeOrder = asyncHandler(async (req, res) => {
       product: item.product,
       quantity: item.quantity,
     }));
+    const defaultPaymentInfo = {
+      paymentMethod: "COD", // Cash on Delivery
+      status: "processing",
+      itemsPrice: 0.0, // Default to 0
+      taxPrice: 0.0, // Default to 0
+      shippingPrice: 0.0, // Default to 0
+      couponAvailable: false,
+      couponValue: 0.0, // Default to 0
+      orderStatus: "processing",
+    };
 
     const newOrder = new Orderdb({
-      shippingInfo: { address, city, phoneNo, postalCode, country },
+      shippingInfo: { address, city, phoneNo, pinCode, state },
       user: user._id,
       orderItems: finalItems,
-      paymentInfo: { ...paymentInfo, totalPrice },
+      paymentInfo: { ...defaultPaymentInfo, totalPrice },
     });
     await newOrder.save();
+    user.orders.push(newOrder);
+    await user.save();
 
     res.status(201).json({
       msg: "Order created",
       success: true,
       data: newOrder,
+      user_order: user.orders,
     });
   } catch (error) {
     console.error(error);
@@ -691,6 +601,89 @@ const placeOrder = asyncHandler(async (req, res) => {
     });
   }
 });
+// const placeOrder = asyncHandler(async (req, res) => {
+//   const { id } = req.user;
+//   validateMongooseId(id);
+//   try {
+//     // if (!token) {
+//     //   return res.status(401).json({ error: "Unauthorized" });
+//     // }
+
+//     // const decoded = jwt.verify(token, process.env.JWT_KEY);
+//     const user = await Userdb.findById(id);
+//     if (!user) {
+//       return res.status(404).json({ error: "User not found" });
+//     }
+
+//     const data = req.body;
+//     const {
+//       address,
+//       city,
+//       phoneNo,
+//       postalCode,
+//       country,
+//       orderItems,
+//       paymentInfo,
+//     } = data;
+
+//     if (
+//       !address ||
+//       !city ||
+//       !phoneNo ||
+//       !postalCode ||
+//       !country ||
+//       !orderItems ||
+//       !paymentInfo
+//     ) {
+//       return res
+//         .status(400)
+//         .json({ msg: "Complete all fields", success: false });
+//     }
+
+//     const productIds = orderItems.map((item) => item.product);
+//     console.log(productIds);
+//     const products = await Productdb.find({ _id: { $in: productIds } });
+
+//     const totalPrice = orderItems.reduce((total, item) => {
+//       const product = products.find((p) => p._id.equals(item.product));
+//       return total + (product ? product.price * item.quantity : 0);
+//     }, 0);
+
+//     const finalItems = orderItems.map((item) => ({
+//       product: item.product,
+//       quantity: item.quantity,
+//     }));
+
+//     if (req.body.couponCode) {
+//       const couponCode = req.body.couponCode
+//       console.log(couponCode)
+//       const coupon = Coupondb.findOne({code: couponCode})
+//       console.log(coupon)
+
+//     }
+
+//     const newOrder = new Orderdb({
+//       shippingInfo: { address, city, phoneNo, postalCode, country },
+//       user: user._id,
+//       orderItems: finalItems,
+//       paymentInfo: { ...paymentInfo, totalPrice },
+//     });
+//     await newOrder.save();
+
+//     res.status(201).json({
+//       msg: "Order created",
+//       success: true,
+//       data: newOrder,
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({
+//       msg: "Internal Server Error",
+//       success: false,
+//       error: error.message,
+//     });
+//   }
+// });
 
 //Block a User
 const blockUser = asyncHandler(async (req, res) => {

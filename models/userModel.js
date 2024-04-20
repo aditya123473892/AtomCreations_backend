@@ -31,13 +31,12 @@ var userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    isVerified:{
-      type:Boolean,
-      default:false
+    isVerified: {
+      type: Boolean,
+      default: false,
     },
-    otp:{
-      type:String,
-    
+    otp: {
+      type: String,
     },
     cart: [
       {
@@ -49,6 +48,12 @@ var userSchema = new mongoose.Schema(
           type: Number,
           default: 1,
         },
+      },
+    ],
+    orders: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Order",
       },
     ],
 
