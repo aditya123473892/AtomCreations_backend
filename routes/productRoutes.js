@@ -12,7 +12,7 @@ const { isAdmin, authMiddleware } = require("../middlewares/authMiddleware");
 
 const router = express.Router();
 
-router.post("/", createProduct);
+router.post("/",authMiddleware,isAdmin, createProduct);
 router.get("/:id", getProduct);
 router.put("/wishlist", authMiddleware, addToWishlist);
 router.put("/rating", authMiddleware, rating);

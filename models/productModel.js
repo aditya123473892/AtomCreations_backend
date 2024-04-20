@@ -13,9 +13,47 @@ var ProductSchema = new mongoose.Schema(
             unique: true,
             lowercase: true,
         },
-        description: {
-            type: String,
-            required: true,
+        description: { 
+            fit:{
+                type:String,
+                
+            },
+            fabric:{
+                type:String,
+
+            },
+            length:{
+                type:String,
+                
+            },
+            mainTrend:{
+                type:String,
+               
+            },
+            neck:{
+                type:String,
+
+            },
+            occasion:{
+                type:String,
+
+            },
+            pattern:{
+                type:String,
+            },
+            sleeveLength:{
+                type:String,
+            },
+            sleeveStyling:{
+                type:String,
+            },
+            sustainable:{
+                type:String,
+            },
+            washCare:{
+                type:String,
+            
+            }
         },
         price: {
             type: Number,
