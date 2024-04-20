@@ -7,7 +7,7 @@ const createCoupon = asyncHandler(async (req, res) => {
         const newCoupon = await Coupondb.create(req.body);
         res.json(newCoupon);
     } catch (error) {
-        throw new error(error);
+        throw new Error(error);
     }
 });
 

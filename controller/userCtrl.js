@@ -320,6 +320,9 @@ const addToCart = asyncHandler(async (req, res) => {
     if (!user) {
       return res.status(404).json({ error: "User not present" });
     }
+    if (!user.isVerified) {
+      return res.status(404).json({ error: "User is not verified" });
+    }
     const product = await Productdb.findById(productId);
     if (!product) {
       return res.status(404).json({ error: "Product not found" });
@@ -542,7 +545,7 @@ const placeOrder = asyncHandler(async (req, res) => {
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
-    if(!user.isVerified){
+    if (!user.isVerified) {
       return res.status(404).json({ error: "User is not verified" });
     }
 
