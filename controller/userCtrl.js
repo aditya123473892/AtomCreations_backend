@@ -566,6 +566,15 @@ const placeOrder = asyncHandler(async (req, res) => {
       const product = products.find((p) => p._id.equals(item.product));
       return total + (product ? product.price * item.quantity : 0);
     }, 0);
+    var ProductsTitle = orderItems.map((item) => {
+      const product = products.find((p) => p._id.equals(item.product));
+      return product.title
+    });
+    var ProductsPrice = orderItems.map((item) => {
+      const product = products.find((p) => p._id.equals(item.product));
+      return product.price
+    });
+    console.log(ProductsTitle)
     //if coupon available
     if (req.body.couponCode) {
       const couponCode = req.body.couponCode;
@@ -578,9 +587,11 @@ const placeOrder = asyncHandler(async (req, res) => {
       var couponValue = coupon.discount;
     }
 
-    const finalItems = orderItems.map((item) => ({
+    const finalItems = orderItems.map((item,index) => ({
       product: item.product,
       quantity: item.quantity,
+      ProductsTitle:ProductsTitle[index],
+      ProductsPrice:ProductsPrice[index]
     }));
     const defaultPaymentInfo = {
       paymentMethod: "COD", // Cash on Delivery
