@@ -542,6 +542,9 @@ const placeOrder = asyncHandler(async (req, res) => {
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
+    if(!user.isVerified){
+      return res.status(404).json({ error: "User is not verified" });
+    }
 
     const data = req.body;
     const { address, city, phoneNo, pinCode, state, orderItems } = data;
@@ -556,10 +559,21 @@ const placeOrder = asyncHandler(async (req, res) => {
     console.log(productIds);
     const products = await Productdb.find({ _id: { $in: productIds } });
 
-    const totalPrice = orderItems.reduce((total, item) => {
+    var totalPrice = orderItems.reduce((total, item) => {
       const product = products.find((p) => p._id.equals(item.product));
       return total + (product ? product.price * item.quantity : 0);
     }, 0);
+    //if coupon available
+    if (req.body.couponCode) {
+      const couponCode = req.body.couponCode;
+      console.log(couponCode);
+      const coupon = await Coupondb.findOne({ code: couponCode });
+      if (coupon && coupon.expiry >= Date.now()) {
+        totalPrice -= totalPrice * (coupon.discount / 100);
+      }
+      var couponAvailable = true;
+      var couponValue = coupon.discount;
+    }
 
     const finalItems = orderItems.map((item) => ({
       product: item.product,
@@ -571,8 +585,8 @@ const placeOrder = asyncHandler(async (req, res) => {
       itemsPrice: 0.0, // Default to 0
       taxPrice: 0.0, // Default to 0
       shippingPrice: 0.0, // Default to 0
-      couponAvailable: false,
-      couponValue: 0.0, // Default to 0
+      // couponAvailable: false,
+      // couponValue: 0.0, // Default to 0
       orderStatus: "processing",
     };
 
@@ -580,7 +594,14 @@ const placeOrder = asyncHandler(async (req, res) => {
       shippingInfo: { address, city, phoneNo, pinCode, state },
       user: user._id,
       orderItems: finalItems,
-      paymentInfo: { ...defaultPaymentInfo, totalPrice },
+      paymentInfo: {
+        ...defaultPaymentInfo,
+        totalPrice,
+        couponAvailable,
+        couponValue,
+      },
+      // couponAvailable:couponAvailable,
+      // couponValue:couponValue
     });
     await newOrder.save();
     user.orders.push(newOrder);
