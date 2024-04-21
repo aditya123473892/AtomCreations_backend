@@ -568,13 +568,13 @@ const placeOrder = asyncHandler(async (req, res) => {
     }, 0);
     var ProductsTitle = orderItems.map((item) => {
       const product = products.find((p) => p._id.equals(item.product));
-      return product.title
+      return product.title;
     });
     var ProductsPrice = orderItems.map((item) => {
       const product = products.find((p) => p._id.equals(item.product));
-      return product.price
+      return product.price;
     });
-    console.log(ProductsTitle)
+    console.log(ProductsTitle);
     //if coupon available
     if (req.body.couponCode) {
       const couponCode = req.body.couponCode;
@@ -587,11 +587,32 @@ const placeOrder = asyncHandler(async (req, res) => {
       var couponValue = coupon.discount;
     }
 
-    const finalItems = orderItems.map((item,index) => ({
+    // for (const item of orderItems) {
+    //   const product = products.find((p) => p._id.equals(item.product));
+    //   if (product) {
+    //     const quantityInStock = product.quantity;
+    //     if (quantityInStock < item.quantity) {
+    //       return res.status(400).json({
+    //         msg: `Insufficient stock for product ${product.title}`,
+    //         success: false,
+    //       });
+    //     }
+    //     product.quantity -= item.quantity;
+    //     await product.save();
+    //     // finalItems.push({
+    //     //   product: item.product,
+    //     //   quantity: item.quantity,
+    //     //   title: product.title,
+    //     //   price: product.price,
+    //     // });
+    //   }
+    // }
+
+    const finalItems = orderItems.map((item, index) => ({
       product: item.product,
       quantity: item.quantity,
-      ProductsTitle:ProductsTitle[index],
-      ProductsPrice:ProductsPrice[index]
+      ProductsTitle: ProductsTitle[index],
+      ProductsPrice: ProductsPrice[index],
     }));
     const defaultPaymentInfo = {
       paymentMethod: "COD", // Cash on Delivery
@@ -603,7 +624,7 @@ const placeOrder = asyncHandler(async (req, res) => {
       // couponValue: 0.0, // Default to 0
       orderStatus: "processing",
     };
-    totalPrice += defaultPaymentInfo.shippingPrice
+    totalPrice += defaultPaymentInfo.shippingPrice;
     const newOrder = new Orderdb({
       shippingInfo: { address, city, phoneNo, pinCode, state },
       user: user._id,
