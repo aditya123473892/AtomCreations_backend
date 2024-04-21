@@ -598,12 +598,12 @@ const placeOrder = asyncHandler(async (req, res) => {
       status: "processing",
       itemsPrice: 0.0, // Default to 0
       taxPrice: 0.0, // Default to 0
-      shippingPrice: 0.0, // Default to 0
+      shippingPrice: 50.0, // Default to 0
       // couponAvailable: false,
       // couponValue: 0.0, // Default to 0
       orderStatus: "processing",
     };
-
+    totalPrice += defaultPaymentInfo.shippingPrice
     const newOrder = new Orderdb({
       shippingInfo: { address, city, phoneNo, pinCode, state },
       user: user._id,
