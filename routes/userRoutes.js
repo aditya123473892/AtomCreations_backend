@@ -11,6 +11,7 @@ const {
     getCartItems,
     increaseQuantity,
     decreaseQuantity,
+    getOrder,
 } = require("../controller/userCtrl");
 
 router.post("/addtocart", authMiddleware, addToCart);
@@ -20,5 +21,6 @@ router.put("/decquantity",authMiddleware, decreaseQuantity)
 router.post("/emptycart", authMiddleware, emptyCart); //
 router.put("/removefromcart", authMiddleware, removeFromCart);
 router.post("/placeorder", authMiddleware, placeOrder);
+router.get("/getorder",authMiddleware, getOrder)
 router.put("/applyCoupon", authMiddleware, applyCoupon);
 module.exports = router;

@@ -657,6 +657,34 @@ const placeOrder = asyncHandler(async (req, res) => {
     });
   }
 });
+
+const getOrder = asyncHandler(async (req, res) => {
+  const { id } = req.user;
+  validateMongooseId(id);
+  const { orderId } = req.body;
+  try {
+    const user = await Userdb.findById(id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    if (!user.isVerified) {
+      return res.status(404).json({ error: "User is not verified" });
+    }
+    if (orderId) {
+      const order = await Orderdb.findById(orderId);
+      console.log(order);
+      res.json(order);
+    } else {
+      res.json({
+        status: false,
+        message: "Please provide order Id",
+      });
+    }
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
 // const placeOrder = asyncHandler(async (req, res) => {
 //   const { id } = req.user;
 //   validateMongooseId(id);
@@ -843,13 +871,13 @@ const resetPassword = asyncHandler(async (req, res) => {
 
 //apply coupon
 const applyCoupon = asyncHandler(async (req, res) => {
-  const { couponId } = req.body;
+  const { couponCode } = req.body;
   const { orderId } = req.body;
   try {
     const { id } = req.user;
     validateMongooseId(id);
 
-    const validCoupon = await Coupondb.findById(couponId);
+    const validCoupon = await Coupondb.findOne({ code: couponCode });
     if (!validCoupon) {
       throw new Error("Invalid Coupon");
     }
@@ -861,7 +889,8 @@ const applyCoupon = asyncHandler(async (req, res) => {
       }
 
       let price = order.paymentInfo.totalPrice;
-      price -= validCoupon.discount;
+
+      price -= (validCoupon.discount / 100) * price;
 
       order.paymentInfo.totalPrice = price;
       await order.save();
@@ -894,6 +923,7 @@ module.exports = {
   emptyCart,
   removeFromCart,
   placeOrder,
+  getOrder,
   applyCoupon,
   verifyOtp,
 };
