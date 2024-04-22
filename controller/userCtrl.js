@@ -682,6 +682,112 @@ const getOrder = asyncHandler(async (req, res) => {
   }
 });
 
+const getUserOrders = asyncHandler(async (req, res) => {
+  const { id } = req.user;
+  validateMongooseId(id);
+
+  try {
+    const user = await Userdb.findById(id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    if (!user.isVerified) {
+      return res.status(404).json({ error: "User is not verified" });
+    }
+
+    const fetchedOrders = [];
+
+    for (const orderId of user.orders) {
+      const order = await Orderdb.findById(orderId);
+
+      if (order) {
+        fetchedOrders.push(order);
+      }
+    }
+    res.json(fetchedOrders);
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
+const addAddress = asyncHandler(async (req, res) => {
+  const { id } = req.user;
+  validateMongooseId(id);
+  try {
+    const user = await Userdb.findById(id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    if (!user.isVerified) {
+      return res.status(404).json({ error: "User is not verified" });
+    }
+
+    const { city, state, pinCode, country, address } = req.body;
+    if (!city || !state || !pinCode || !country || !address) {
+      throw new Error("All fields are required");
+    } else {
+      user.addresses.push({ city, state, pinCode, country, address });
+      await user.save();
+      res.json(user);
+    }
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
+const getAddress = asyncHandler(async (req, res) => {
+  const { id } = req.user;
+  validateMongooseId(id);
+  try {
+    const user = await Userdb.findById(id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    if (!user.isVerified) {
+      return res.status(404).json({ error: "User is not verified" });
+    }
+    const addresses = [];
+    for (const address of user.addresses) {
+      if (address) {
+        addresses.push(address);
+      }
+    }
+    res.json(addresses);
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
+const deleteAddress = asyncHandler(async (req, res) => {
+  const { addressId } = req.body;
+  const { id } = req.user;
+  validateMongooseId(id);
+  try {
+    const user = await Userdb.findById(id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    if (!user.isVerified) {
+      return res.status(404).json({ error: "User is not verified" });
+    }
+
+    const addressIndex = user.addresses.findIndex(
+      (address) => address._id.toString() === addressId
+    );
+
+    if (addressIndex === -1) {
+      return res.status(404).json({ error: "Address not found" });
+    }
+
+    user.addresses.splice(addressIndex, 1);
+
+    await user.save();
+
+    res.json({ success: true, message: "Address deleted successfully", user });
+  } catch (error) {
+    throw new Error(error);
+  }
+});
 // const placeOrder = asyncHandler(async (req, res) => {
 //   const { id } = req.user;
 //   validateMongooseId(id);
@@ -923,4 +1029,8 @@ module.exports = {
   getOrder,
   applyCoupon,
   verifyOtp,
+  getUserOrders,
+  addAddress,
+  getAddress,
+  deleteAddress,
 };

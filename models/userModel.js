@@ -61,10 +61,32 @@ var userSchema = new mongoose.Schema(
         ref: "Product",
       },
     ],
-    address: [
+    addresses: [
       {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Address",
+        address: {
+          type: String,
+          required: true,
+        },
+        city: {
+          type: String,
+          required: true,
+        },
+        state: {
+          type: String,
+          required: true,
+        },
+        pinCode: {
+          type: String,
+          required: true,
+        },
+        country: {
+          type: String,
+          required: true,
+        },
+        isDefault: {
+          type: Boolean,
+          default: false,
+        },
       },
     ],
     refreshToken: {
