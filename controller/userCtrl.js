@@ -1012,6 +1012,124 @@ const applyCoupon = asyncHandler(async (req, res) => {
 
   res.json(order);
 });
+//add to wishlist
+// Add item to cart
+
+const addToWishlist = asyncHandler(async (req, res) => {
+  const { id } = req.user;
+  validateMongooseId(id);
+  const { productId } = req.body;
+  if (!productId) {
+    res.status(400).json({
+      success: false,
+      message: "Product id required",
+    });
+  }
+
+  try {
+    const user = await Userdb.findById(id);
+
+    if (!user) {
+      return res.status(404).json({ error: "User not present" });
+    }
+    if (!user.isVerified) {
+      return res.status(404).json({ error: "User is not verified" });
+    }
+    const product = await Productdb.findById(productId);
+    if (!product) {
+      return res.status(404).json({ error: "Product not found" });
+    }
+
+    const productIndex = user.wishList.find(
+      (item) => item._id.toString() === productId
+    );
+    console.log(productIndex);
+
+    if (productIndex) {
+      return res.json({ message: "Product already exists in the wishlist" });
+    } else {
+      user.wishList.push(productId);
+    }
+
+    await user.save();
+
+    // Return success response
+    res.json({ message: "Item added to wishlist successfully", user });
+  } catch (error) {
+    res.status(500).json({
+      msg: "Internal Server Error",
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+const getWishlist = asyncHandler(async (req, res) => {
+  const { id } = req.user;
+  validateMongooseId(id);
+  try {
+    const user = await Userdb.findById(id);
+    if (!user) {
+      return res.status(404).json({ error: "User not present" });
+    }
+    const wishList = user.wishList;
+    console.log(wishList);
+    const products = await Productdb.find({ _id: { $in: wishList } });
+    const wishlistItems = wishList.map((itemId) => {
+      const prodId = itemId._id;
+      const product = products.find(
+        (p) => p._id.toString() === prodId.toString()
+      );
+      return {
+        productId: itemId,
+        productDetails: product,
+        
+      };
+    });
+
+    
+    res.json({ wishlistItems: wishlistItems });
+  } catch (error) {
+    res.status(500).json({
+      msg: "Internal Server Error",
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+const removeFromWishlist = asyncHandler(async (req, res) => {
+  const { productId } = req.body;
+  if (!productId) {
+    res.status(400).json({
+      success: false,
+      message: "Product id required",
+    });
+  }
+  const { id } = req.user;
+  validateMongooseId(id);
+  try {
+    const user = await Userdb.findById(id);
+    if (!user) {
+      return res.status(404).json({ error: "User not present" });
+    }
+    const item = user.wishList.findIndex((item)=> item._id.toString()==productId)
+    console.log(item)
+    if(item==-1){
+      throw new Error("Products don't exist in wishlist")
+    }
+    user.wishList = user.wishList.filter((item) => item._id.toString() !== productId);
+
+    await user.save();
+    res.json({ message: "Item removed succesfully",user });
+  } catch (error) {
+    res.status(500).json({
+      msg: "Internal Server Error",
+      success: false,
+      error: error.message,
+    });
+  }
+});
 
 module.exports = {
   sendOtp,
@@ -1041,4 +1159,7 @@ module.exports = {
   addAddress,
   getAddress,
   deleteAddress,
+  addToWishlist,
+  getWishlist,
+  removeFromWishlist,
 };
