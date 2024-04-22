@@ -4,7 +4,7 @@ const dbConnect = require("./config/dbConnect");
 const { UserNotFound, errorHandler } = require("./middlewares/errorHandling");
 const app = express();
 const path = require("path");
-
+const cloudinary = require('cloudinary').v2;
 const PORT = process.env.PORT || 4000;
 const userRouter = require("./routes/userRoutes");
 const authRouter = require("./routes/authRoutes");
@@ -46,6 +46,11 @@ app.use("/api/category", categoryRouter);
 app.use("/api/coupon", couponRouter);
 app.use(UserNotFound);
 app.use(errorHandler);
+
+cloudinary.config({
+  secure:true
+});
+console.log(cloudinary.config());
 
 app.listen(PORT, () => {
   console.log(`Server running at ${PORT}`);

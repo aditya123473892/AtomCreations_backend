@@ -22,7 +22,7 @@ const sendOtp = asyncHandler(async (req, res) => {
       throw new Error("User Already Exists");
     } else if (findUser && !findUser.isVerified) {
       const otp = otpGenerate();
-      console.log(otp);
+      // console.log(otp);
 
       const data = {
         to: email,
@@ -31,15 +31,14 @@ const sendOtp = asyncHandler(async (req, res) => {
         htm: `Please verify your email address. <br> OTP IS ${otp}`,
       };
       sendEmail(data);
-      console.log(data);
+      // console.log(data);
 
       findUser.otp = otp;
       await findUser.save();
       res.json(findUser);
-      res.json(otp);
     } else {
       const otp = otpGenerate();
-      console.log(otp);
+      // console.log(otp);
 
       const data = {
         to: email,
@@ -55,8 +54,6 @@ const sendOtp = asyncHandler(async (req, res) => {
 
       sendJwt(res, newUser, `User created`);
       res.json(newUser);
-
-      res.json(otp);
     }
 
     // const newUser = await Userdb.create(req.body);
