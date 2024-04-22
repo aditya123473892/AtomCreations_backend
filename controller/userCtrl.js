@@ -921,15 +921,23 @@ const unblockUser = asyncHandler(async (req, res) => {
 
 const updatePassword = asyncHandler(async (req, res) => {
   const { id } = req.user;
-  const { password } = req.body;
+  // const { password } = req.body;
+  const { currentPassword, newPassword } = req.body;
   validateMongooseId(id);
-  const user = await Userdb.findById(id);
-  if (password) {
-    user.password = password;
-    const updatedPass = await user.save();
-    res.json(updatedPass);
-  } else {
-    res.json(user);
+  try {
+    const user = await Userdb.findById(id);
+    if (!currentPassword || !(await user.isPasswordMatched(currentPassword))) {
+      return res.status(400).json({ error: "Current password is incorrect" });
+    }
+    if (!newPassword) {
+      return res.status(400).json({ error: "New password is required" });
+    }
+
+    user.password = newPassword;
+    await user.save();
+    return res.json(user);
+  } catch (err) {
+    throw new Error(err);
   }
 });
 
