@@ -30,7 +30,7 @@ const sendOtp = asyncHandler(async (req, res) => {
         subject: "OTP Verification",
         htm: `Please verify your email address. <br> OTP IS ${otp}`,
       };
-      sendEmail(data);
+      await sendEmail(data);
       // console.log(data);
 
       findUser.otp = otp;
@@ -1083,11 +1083,9 @@ const getWishlist = asyncHandler(async (req, res) => {
       return {
         productId: itemId,
         productDetails: product,
-        
       };
     });
 
-    
     res.json({ wishlistItems: wishlistItems });
   } catch (error) {
     res.status(500).json({
@@ -1113,15 +1111,19 @@ const removeFromWishlist = asyncHandler(async (req, res) => {
     if (!user) {
       return res.status(404).json({ error: "User not present" });
     }
-    const item = user.wishList.findIndex((item)=> item._id.toString()==productId)
-    console.log(item)
-    if(item==-1){
-      throw new Error("Products don't exist in wishlist")
+    const item = user.wishList.findIndex(
+      (item) => item._id.toString() == productId
+    );
+    console.log(item);
+    if (item == -1) {
+      throw new Error("Products don't exist in wishlist");
     }
-    user.wishList = user.wishList.filter((item) => item._id.toString() !== productId);
+    user.wishList = user.wishList.filter(
+      (item) => item._id.toString() !== productId
+    );
 
     await user.save();
-    res.json({ message: "Item removed succesfully",user });
+    res.json({ message: "Item removed succesfully", user });
   } catch (error) {
     res.status(500).json({
       msg: "Internal Server Error",
