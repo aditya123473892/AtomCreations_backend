@@ -46,7 +46,7 @@ const sendOtp = asyncHandler(async (req, res) => {
         subject: "OTP Verification",
         htm: `Please verify your email address. <br> OTP IS ${otp}`,
       };
-      sendEmail(data);
+      await sendEmail(data);
       const newUser = await Userdb.create({
         ...req.body,
         otp: otp,
@@ -300,7 +300,7 @@ const addToCart = asyncHandler(async (req, res) => {
   const { id } = req.user;
   validateMongooseId(id);
   // const { token } = req.cookies;
-  const { productId } = req.body;
+  const { productId,quantity,size } = req.body;
   if (!productId) {
     res.status(400).json({
       success: false,
@@ -320,13 +320,17 @@ const addToCart = asyncHandler(async (req, res) => {
     if (!user.isVerified) {
       return res.status(404).json({ error: "User is not verified" });
     }
+    if(!size){
+      return res.status(404).json({ error: "size is required" });
+
+    }
     const product = await Productdb.findById(productId);
     if (!product) {
       return res.status(404).json({ error: "Product not found" });
     }
     console.log(product.price);
     const productIndex = user.cart.find(
-      (item) => item._id.toString() === productId
+      (item) => item._id.toString() === productId && item.size === size
     );
     console.log(productIndex);
     // const productIndex = user.cart.findIndex(
@@ -336,13 +340,14 @@ const addToCart = asyncHandler(async (req, res) => {
     if (productIndex) {
       return res.json({ message: "Product already exists in the cart" });
     } else {
-      user.cart.push(productId);
+      // user.cart.push({ product: productId, quantity, size });
+      user.cart.push({ _id: productId, quantity: quantity, size: size });
     }
 
     await user.save();
 
     // Return success response
-    res.json({ message: "Item added to cart successfully" });
+    res.json({ message: "Item added to cart successfully",user });
   } catch (error) {
     res.status(500).json({
       msg: "Internal Server Error",
@@ -351,6 +356,59 @@ const addToCart = asyncHandler(async (req, res) => {
     });
   }
 });
+// const getCartItems = asyncHandler(async (req, res) => {
+//   const { id } = req.user;
+//   validateMongooseId(id);
+//   try {
+//     const user = await Userdb.findById(id);
+//     if (!user) {
+//       return res.status(404).json({ error: "User not present" });
+//     }
+//     const cart = user.cart;
+//     console.log(cart);
+//     const products = await Productdb.find({ _id: { $in: cart } });
+//     const cartItems = cart.map((itemId) => {
+//       const prodId = itemId._id;
+//       const product = products.find(
+//         (p) => p._id.toString() === prodId.toString()
+//       );
+//       const price = product.price * itemId.quantity;
+//       console.log(price);
+//       return {
+//         productId: itemId,
+//         productDetails: product,
+//         price: price,
+//       };
+//     });
+//     console.log(cartItems)
+//     cartItems.map((itemId) => {
+//       const prodId = itemId.product;
+//       const product = products.find(
+//         (p) => p._id.toString() === prodId.toString()
+//       );
+//       const price = product.price * itemId.quantity;
+//       return {
+//         productId: itemId.product, // reference the product object
+//         size: itemId.size,
+//         productDetails: product,
+//         price,
+//       };
+//     });
+
+//     const totalprice = cartItems.reduce((total, item) => {
+//       return total + item.price;
+//     }, 0);
+//     console.log(totalprice);
+//     res.json({ cartItems: cartItems, totalprice: totalprice });
+//   } catch (error) {
+//     res.status(500).json({
+//       msg: "Internal Server Error",
+//       success: false,
+//       error: error.message,
+//     });
+//   }
+// });
+
 const getCartItems = asyncHandler(async (req, res) => {
   const { id } = req.user;
   validateMongooseId(id);
@@ -360,26 +418,24 @@ const getCartItems = asyncHandler(async (req, res) => {
       return res.status(404).json({ error: "User not present" });
     }
     const cart = user.cart;
-    console.log(cart);
-    const products = await Productdb.find({ _id: { $in: cart } });
-    const cartItems = cart.map((itemId) => {
-      const prodId = itemId._id;
-      const product = products.find(
-        (p) => p._id.toString() === prodId.toString()
-      );
-      const price = product.price * itemId.quantity;
-      console.log(price);
+    console.log(cart)
+    const products = await Productdb.find({ _id: { $in: cart.map((item) => item._id) } });
+    console.log(products)
+    const cartItems = cart.map((item) => {
+      const product = products.find((p) => p._id.toString() === item._id.toString());
+      const price = product.price * item.quantity;
       return {
-        productId: itemId,
+        productId: item._id,
         productDetails: product,
         price: price,
+        quantity:item.quantity,
+        size: item.size, // Include size in the response
       };
     });
-
+    console.log(cartItems)
     const totalprice = cartItems.reduce((total, item) => {
       return total + item.price;
     }, 0);
-    console.log(totalprice);
     res.json({ cartItems: cartItems, totalprice: totalprice });
   } catch (error) {
     res.status(500).json({
