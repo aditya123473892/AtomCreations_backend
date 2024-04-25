@@ -19,6 +19,7 @@ const {
   addToWishlist,
   getWishlist,
   removeFromWishlist,
+  confirmOrder,
 } = require("../controller/userCtrl");
 const contactUs = require("../controller/contactuscTRL.JS");
 
@@ -32,9 +33,10 @@ router.put("/decquantity", authMiddleware, decreaseQuantity);
 router.post("/emptycart", authMiddleware, emptyCart); //
 router.put("/removefromcart", authMiddleware, removeFromCart);
 router.post("/placeorder", authMiddleware, placeOrder);
-router.get("/getorder", authMiddleware, getOrder);
+router.get("/getorder/:orderId", authMiddleware, getOrder);
 router.get("/getuserorders", authMiddleware, getUserOrders);
-router.put("/applyCoupon", authMiddleware, applyCoupon);
+router.put("/applyCoupon/:orderId", authMiddleware, applyCoupon);
+router.put("/confirmOrder/:orderId",authMiddleware,confirmOrder)
 router.post("/addAdress", authMiddleware, addAddress);
 router.get("/getaddress", authMiddleware, getAddress);
 router.put("/deleteAddress", authMiddleware, deleteAddress);

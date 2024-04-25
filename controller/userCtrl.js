@@ -701,7 +701,7 @@ const placeOrder = asyncHandler(async (req, res) => {
       // couponValue:couponValue
     });
     await newOrder.save();
-    user.orders.push(newOrder);
+    // user.orders.push(newOrder);
     await user.save();
 
     res.status(201).json({
@@ -723,7 +723,7 @@ const placeOrder = asyncHandler(async (req, res) => {
 const getOrder = asyncHandler(async (req, res) => {
   const { id } = req.user;
   validateMongooseId(id);
-  const { orderId } = req.body;
+  const { orderId } = req.params;
   try {
     const user = await Userdb.findById(id);
     if (!user) {
@@ -1048,10 +1048,17 @@ const resetPassword = asyncHandler(async (req, res) => {
 //apply coupon
 const applyCoupon = asyncHandler(async (req, res) => {
   const { couponCode } = req.body;
-  const { orderId } = req.body;
+  const { orderId } = req.params;
   try {
     const { id } = req.user;
     validateMongooseId(id);
+    const user = await Userdb.findById(id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    if (!user.isVerified) {
+      return res.status(404).json({ error: "User is not verified" });
+    }
 
     const validCoupon = await Coupondb.findOne({ code: couponCode });
     if (!validCoupon) {
@@ -1076,6 +1083,39 @@ const applyCoupon = asyncHandler(async (req, res) => {
   }
 
   res.json(order);
+});
+
+const confirmOrder = asyncHandler(async (req, res) => {
+  const { orderId } = req.params;
+  try {
+    const { id } = req.user;
+    validateMongooseId(id);
+    var user
+     user = await Userdb.findById(id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    if (!user.isVerified) {
+      return res.status(404).json({ error: "User is not verified" });
+    }
+    var order
+    if (orderId) {
+       order = await Orderdb.findById(orderId);
+      if (!order) {
+        throw new Error("Order not found");
+      }
+      order.isConfirmed = true;
+      await order.save();
+      const newOrder = order
+      user.orders.push(newOrder);
+      
+      await user.save()
+    }
+  } catch (error) {
+    throw new Error(error);
+  }
+
+  res.json({order,user});
 });
 //add to wishlist
 // Add item to cart
@@ -1229,4 +1269,5 @@ module.exports = {
   addToWishlist,
   getWishlist,
   removeFromWishlist,
+  confirmOrder
 };
