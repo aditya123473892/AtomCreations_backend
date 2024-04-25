@@ -27,6 +27,11 @@ const orderSchema = mongoose.Schema({
     //     required: true,
     // },
   },
+  isConfirmed:{
+    type:Boolean,
+    default:false,
+
+  },
   user: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
