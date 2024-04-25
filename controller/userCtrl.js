@@ -1090,32 +1090,32 @@ const confirmOrder = asyncHandler(async (req, res) => {
   try {
     const { id } = req.user;
     validateMongooseId(id);
-    var user
-     user = await Userdb.findById(id);
+    var user;
+    user = await Userdb.findById(id);
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
     if (!user.isVerified) {
       return res.status(404).json({ error: "User is not verified" });
     }
-    var order
+    var order;
     if (orderId) {
-       order = await Orderdb.findById(orderId);
+      order = await Orderdb.findById(orderId);
       if (!order) {
         throw new Error("Order not found");
       }
       order.isConfirmed = true;
       await order.save();
-      const newOrder = order
+      const newOrder = order;
       user.orders.push(newOrder);
-      
-      await user.save()
+
+      await user.save();
     }
   } catch (error) {
     throw new Error(error);
   }
 
-  res.json({order,user});
+  res.json({ order, user });
 });
 //add to wishlist
 // Add item to cart
@@ -1269,5 +1269,5 @@ module.exports = {
   addToWishlist,
   getWishlist,
   removeFromWishlist,
-  confirmOrder
+  confirmOrder,
 };
