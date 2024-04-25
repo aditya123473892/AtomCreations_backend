@@ -300,7 +300,7 @@ const addToCart = asyncHandler(async (req, res) => {
   const { id } = req.user;
   validateMongooseId(id);
   // const { token } = req.cookies;
-  const { productId,quantity,size } = req.body;
+  const { productId, quantity, size } = req.body;
   if (!productId) {
     res.status(400).json({
       success: false,
@@ -320,9 +320,8 @@ const addToCart = asyncHandler(async (req, res) => {
     if (!user.isVerified) {
       return res.status(404).json({ error: "User is not verified" });
     }
-    if(!size){
+    if (!size) {
       return res.status(404).json({ error: "size is required" });
-
     }
     const product = await Productdb.findById(productId);
     if (!product) {
@@ -347,7 +346,7 @@ const addToCart = asyncHandler(async (req, res) => {
     await user.save();
 
     // Return success response
-    res.json({ message: "Item added to cart successfully",user });
+    res.json({ message: "Item added to cart successfully", user });
   } catch (error) {
     res.status(500).json({
       msg: "Internal Server Error",
@@ -418,21 +417,25 @@ const getCartItems = asyncHandler(async (req, res) => {
       return res.status(404).json({ error: "User not present" });
     }
     const cart = user.cart;
-    console.log(cart)
-    const products = await Productdb.find({ _id: { $in: cart.map((item) => item._id) } });
-    console.log(products)
+    console.log(cart);
+    const products = await Productdb.find({
+      _id: { $in: cart.map((item) => item._id) },
+    });
+    console.log(products);
     const cartItems = cart.map((item) => {
-      const product = products.find((p) => p._id.toString() === item._id.toString());
+      const product = products.find(
+        (p) => p._id.toString() === item._id.toString()
+      );
       const price = product.price * item.quantity;
       return {
         productId: item._id,
         productDetails: product,
         price: price,
-        quantity:item.quantity,
+        quantity: item.quantity,
         size: item.size, // Include size in the response
       };
     });
-    console.log(cartItems)
+    console.log(cartItems);
     const totalprice = cartItems.reduce((total, item) => {
       return total + item.price;
     }, 0);
@@ -494,7 +497,7 @@ const emptyCart = asyncHandler(async (req, res) => {
 // });
 
 const removeFromCart = asyncHandler(async (req, res) => {
-  const { productId } = req.body;
+  const { productId, size } = req.body;
   if (!productId) {
     res.status(400).json({
       success: false,
@@ -508,7 +511,9 @@ const removeFromCart = asyncHandler(async (req, res) => {
     if (!user) {
       return res.status(404).json({ error: "User not present" });
     }
-    user.cart = user.cart.filter((item) => item._id.toString() !== productId);
+    user.cart = user.cart.filter(
+      (item) => item._id.toString() !== productId && item.size !== size
+    );
 
     await user.save();
     res.json({ message: "Item removed succesfully" });
@@ -521,7 +526,7 @@ const removeFromCart = asyncHandler(async (req, res) => {
   }
 });
 const increaseQuantity = asyncHandler(async (req, res) => {
-  const { productId } = req.body;
+  const { productId, size } = req.body;
   const { id } = req.user;
   validateMongooseId(id);
 
@@ -539,7 +544,7 @@ const increaseQuantity = asyncHandler(async (req, res) => {
     user.cart = user.cart.filter((item) => item.toString() !== productId);
 
     const cartItem = user.cart.find(
-      (item) => item._id.toString() === productId
+      (item) => item._id.toString() === productId && item.size === size
     );
 
     cartItem.quantity += 1;
@@ -555,7 +560,7 @@ const increaseQuantity = asyncHandler(async (req, res) => {
 });
 
 const decreaseQuantity = asyncHandler(async (req, res) => {
-  const { productId } = req.body;
+  const { productId, size } = req.body;
   const { id } = req.user;
   validateMongooseId(id);
 
@@ -567,7 +572,7 @@ const decreaseQuantity = asyncHandler(async (req, res) => {
     user.cart = user.cart.filter((item) => item.toString() !== productId);
 
     const cartItem = user.cart.find(
-      (item) => item._id.toString() === productId
+      (item) => item._id.toString() === productId && item.size === size
     );
     if (cartItem.quantity <= 0) {
       return res.status(404).json({ error: "Product not found in cart" });
@@ -615,6 +620,8 @@ const placeOrder = asyncHandler(async (req, res) => {
     console.log(productIds);
     const products = await Productdb.find({ _id: { $in: productIds } });
 
+    // const products = await Productdb.find({ _id: { $in: orderItems.map((item) => item.product) } });
+    console.log(products);
     var totalPrice = orderItems.reduce((total, item) => {
       const product = products.find((p) => p._id.equals(item.product));
       return total + (product ? product.price * item.quantity : 0);
@@ -623,11 +630,12 @@ const placeOrder = asyncHandler(async (req, res) => {
       const product = products.find((p) => p._id.equals(item.product));
       return product.title;
     });
+    // console.log(ProductsTitle)
     var ProductsPrice = orderItems.map((item) => {
       const product = products.find((p) => p._id.equals(item.product));
       return product.price;
     });
-    console.log(ProductsTitle);
+    // console.log(ProductsTitle);
     //if coupon available
     if (req.body.couponCode) {
       const couponCode = req.body.couponCode;
@@ -664,6 +672,7 @@ const placeOrder = asyncHandler(async (req, res) => {
     const finalItems = orderItems.map((item, index) => ({
       product: item.product,
       quantity: item.quantity,
+      size: item.size,
       ProductsTitle: ProductsTitle[index],
       ProductsPrice: ProductsPrice[index],
     }));

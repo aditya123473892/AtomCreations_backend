@@ -20,6 +20,7 @@ const {
   getWishlist,
   removeFromWishlist,
 } = require("../controller/userCtrl");
+const contactUs = require("../controller/contactuscTRL.JS");
 
 router.post("/addtocart", authMiddleware, addToCart);
 router.get("/getcartitem", authMiddleware, getCartItems);
@@ -37,4 +38,6 @@ router.put("/applyCoupon", authMiddleware, applyCoupon);
 router.post("/addAdress", authMiddleware, addAddress);
 router.get("/getaddress", authMiddleware, getAddress);
 router.put("/deleteAddress", authMiddleware, deleteAddress);
+
+router.post("/contactus",contactUs)
 module.exports = router;
