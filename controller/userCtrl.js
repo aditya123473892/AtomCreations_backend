@@ -765,7 +765,7 @@ const getUserOrders = asyncHandler(async (req, res) => {
     for (const orderId of user.orders) {
       const order = await Orderdb.findById(orderId);
 
-      if (order) {
+      if (order && order.isConfirmed) {
         fetchedOrders.push(order);
       }
     }
