@@ -4,7 +4,7 @@ const dbConnect = require("./config/dbConnect");
 const { UserNotFound, errorHandler } = require("./middlewares/errorHandling");
 const app = express();
 const path = require("path");
-const cloudinary = require('cloudinary').v2;
+const cloudinary = require("cloudinary").v2;
 const PORT = process.env.PORT || 4000;
 const userRouter = require("./routes/userRoutes");
 const authRouter = require("./routes/authRoutes");
@@ -25,18 +25,11 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 const cors = require("cors");
-// const corsOption = {
-//   origin: '*',
-//   credentials: true,
-//   methods: ["GET", "POST", "PUT", "DELETE"],
-// };
 const corsOption = {
-  origin:"*",
-  // origin: ["http://localhost:3000"],
+  origin: ["http://localhost:3000"],
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE"],
 };
-
 app.use(cors(corsOption));
 
 app.use("/api/user", authRouter);
@@ -48,7 +41,7 @@ app.use(UserNotFound);
 app.use(errorHandler);
 
 cloudinary.config({
-  secure:true
+  secure: true,
 });
 console.log(cloudinary.config());
 
