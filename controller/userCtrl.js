@@ -1086,7 +1086,7 @@ const applyCoupon = asyncHandler(async (req, res) => {
 });
 
 const confirmOrder = asyncHandler(async (req, res) => {
-  const { orderId } = req.params;
+  const { orderId } = req.body;
   try {
     const { id } = req.user;
     validateMongooseId(id);

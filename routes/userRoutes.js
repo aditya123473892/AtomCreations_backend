@@ -36,7 +36,7 @@ router.post("/placeorder", authMiddleware, placeOrder);
 router.get("/getorder/:orderId", authMiddleware, getOrder);
 router.get("/getuserorders", authMiddleware, getUserOrders);
 router.put("/applyCoupon/:orderId", authMiddleware, applyCoupon);
-router.put("/confirmOrder/:orderId",authMiddleware,confirmOrder)
+router.put("/confirmOrder",authMiddleware,confirmOrder)
 router.post("/addAdress", authMiddleware, addAddress);
 router.get("/getaddress", authMiddleware, getAddress);
 router.put("/deleteAddress", authMiddleware, deleteAddress);
