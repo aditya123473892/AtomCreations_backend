@@ -1069,7 +1069,7 @@ const applyCoupon = asyncHandler(async (req, res) => {
     if (orderId) {
       order = await Orderdb.findById(orderId);
       console.log(order.paymentInfo);
-
+      var price = order.paymentInfo.totalPrice;
       if (!order) {
         throw new Error("Order not found");
       }
@@ -1077,10 +1077,12 @@ const applyCoupon = asyncHandler(async (req, res) => {
       if (order.paymentInfo.couponAvailable) {
         return res.json({ message: "Coupon is already applied" });
       } else {
-        let price = order.paymentInfo.totalPrice;
-        // console.log(price);
+        
+        console.log(price);
         price -= (validCoupon.discount / 100) * price;
-        order.paymentInfo.price = price;
+        console.log(price)
+        order.paymentInfo.totalPrice = price;
+        console.log(order.paymentInfo.price)
         order.paymentInfo.couponAvailable = true;
         order.paymentInfo.couponValue = validCoupon.discount;
         await order.save();
