@@ -511,12 +511,17 @@ const removeFromCart = asyncHandler(async (req, res) => {
     if (!user) {
       return res.status(404).json({ error: "User not present" });
     }
+    // user.cart = user.cart.filter(
+    //   !(item._id.toString() === productId && item.size === size)
+    // );
     user.cart = user.cart.filter(
-      (item) => item._id.toString() !== productId && item.size !== size
+      (item) => !(item._id.toString() === productId && item.size === size)
     );
+    
 
     await user.save();
-    res.json({ message: "Item removed succesfully" });
+    const cart = user.cart
+    res.json(user.cart);
   } catch (error) {
     res.status(500).json({
       msg: "Internal Server Error",
