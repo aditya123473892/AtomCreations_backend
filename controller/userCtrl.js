@@ -1065,24 +1065,31 @@ const applyCoupon = asyncHandler(async (req, res) => {
       throw new Error("Invalid Coupon");
     }
     var order;
+
     if (orderId) {
       order = await Orderdb.findById(orderId);
+      console.log(order.paymentInfo);
+
       if (!order) {
         throw new Error("Order not found");
       }
-
-      let price = order.paymentInfo.totalPrice;
-
-      price -= (validCoupon.discount / 100) * price;
-
-      order.paymentInfo.totalPrice = price;
-      await order.save();
+      console.log(order.paymentInfo.couponAvailable)
+      if (order.paymentInfo.couponAvailable) {
+        return res.json({ message: "Coupon is already applied" });
+      } else {
+        let price = order.paymentInfo.totalPrice;
+        // console.log(price);
+        price -= (validCoupon.discount / 100) * price;
+        order.paymentInfo.price = price;
+        order.paymentInfo.couponAvailable = true;
+        order.paymentInfo.couponValue = validCoupon.discount;
+        await order.save();
+        res.json(order);
+      }
     }
   } catch (error) {
     throw new Error(error);
   }
-
-  res.json(order);
 });
 
 const confirmOrder = asyncHandler(async (req, res) => {
