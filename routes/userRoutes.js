@@ -21,7 +21,7 @@ const {
   removeFromWishlist,
   confirmOrder,
 } = require("../controller/userCtrl");
-const contactUs = require("../controller/contactuscTRL.JS");
+const contactUs = require("../controller/contactusCtrl");
 
 router.post("/addtocart", authMiddleware, addToCart);
 router.get("/getcartitem", authMiddleware, getCartItems);
