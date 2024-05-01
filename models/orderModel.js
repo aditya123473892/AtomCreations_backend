@@ -10,6 +10,15 @@ const orderSchema = mongoose.Schema({
       type: String,
       required: true,
     },
+    name: {
+      type: String,
+      required: true,
+    },
+
+    email: {
+      type: String,
+      required: true,
+    },
     state: {
       type: String,
       required: true,
@@ -27,10 +36,9 @@ const orderSchema = mongoose.Schema({
     //     required: true,
     // },
   },
-  isConfirmed:{
-    type:Boolean,
-    default:false,
-
+  isConfirmed: {
+    type: Boolean,
+    default: false,
   },
   user: {
     type: mongoose.Schema.Types.ObjectId,
@@ -64,10 +72,18 @@ const orderSchema = mongoose.Schema({
   ],
 
   paymentInfo: {
-    // id: {
-    //     type: String,
-    //     required: true,
-    // },
+    id: {
+      type: String,
+    },
+    razorpay_order_id: {
+      type: String,
+    },
+    razorpay_payment_id: {
+      type: String,
+    },
+    razorpay_signature: {
+      type: String,
+    },
     paymentMethod: {
       type: String,
       default: "COD",
@@ -125,4 +141,16 @@ const orderSchema = mongoose.Schema({
   },
 });
 
+orderSchema.pre("save", function (next) {
+  if (this.paymentInfo.paymentMethod === "razorpay") {
+    this.paymentInfo.razorpay_order_id = ""; // Set default values
+    this.paymentInfo.razorpay_payment_id = "";
+    this.paymentInfo.razorpay_signature = "";
+  } else {
+    delete this.paymentInfo.razorpay_order_id;
+    delete this.paymentInfo.razorpay_payment_id;
+    delete this.paymentInfo.razorpay_signature;
+  }
+  next();
+});
 module.exports = mongoose.model("Order", orderSchema);
