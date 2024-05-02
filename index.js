@@ -11,7 +11,7 @@ const authRouter = require("./routes/authRoutes");
 const productRouter = require("./routes/productRoutes");
 const categoryRouter = require("./routes/categoryRoutes");
 const couponRouter = require("./routes/couponRoutes");
-const razorpayRouter = require("./routes/razorpayRoutes")
+const razorpayRouter = require("./routes/razorpayRoutes");
 const cookieParser = require("cookie-parser");
 const morgan = require("morgan");
 
@@ -26,7 +26,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 const cors = require("cors");
 const corsOption = {
-  origin: ["https://atomcreations.co"],
+  origin: ["http://localhost:3000"],
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE"],
 };
@@ -42,7 +42,6 @@ app.use("/api/payment", razorpayRouter);
 app.get("/api/payment/getkey", (req, res) =>
   res.status(200).json(process.env.RAZORPAY_API_KEY)
 );
-
 
 app.use(UserNotFound);
 app.use(errorHandler);

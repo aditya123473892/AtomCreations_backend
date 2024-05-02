@@ -21,12 +21,10 @@ const checkout = asyncHandler(async (req, res) => {
     order,
   });
 });
-
 const paymentVerification = asyncHandler(async (req, res) => {
   const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
     req.body;
   const { orderId } = req.params;
-  console.log(orderId);
 
   const body = razorpay_order_id + "|" + razorpay_payment_id;
 
@@ -38,49 +36,40 @@ const paymentVerification = asyncHandler(async (req, res) => {
   const isAuthentic = expectedSignature === razorpay_signature;
 
   if (isAuthentic) {
-    // Database comes here
-    // const order = await Orderdb.findById(orderId);
-    // console.log(order);
-
-    await razorpaydb.create({
-      razorpay_order_id,
-      razorpay_payment_id,
-      razorpay_signature,
-    });
-    console.log(razorpay_order_id);
-    console.log(razorpay_payment_id);
-    console.log(razorpay_signature);
-    // order.paymentInfo.razorpay_order_id = razorpay_order_id;
-    // order.paymentInfo.razorpay_payment_id = razorpay_payment_id;
-    // order.paymentInfo.razorpay_signature = razorpay_signature;
-    // order.isConfirmed = true
-
-    const order = await Orderdb.findOneAndUpdate(
-      { _id: orderId },
-      {
-        $set: {
-          "paymentInfo.razorpay_order_id": razorpay_order_id,
-          "paymentInfo.razorpay_payment_id": razorpay_payment_id,
-          "paymentInfo.razorpay_signature": razorpay_signature,
-          isConfirmed: true,
+    try {
+     
+      const updatedOrder = await Orderdb.findOneAndUpdate(
+        { _id: orderId },
+        {
+          $set: {
+            "paymentInfo.razorpay_order_id": razorpay_order_id,
+            "paymentInfo.razorpay_payment_id": razorpay_payment_id,
+            "paymentInfo.razorpay_signature": razorpay_signature,
+            orderStatus: "completed", 
+          },
         },
-      },
-      { new: true }
-    );
-    await order.save();
-    console.log(order);
+        { new: true }
+      );
 
-    res.redirect(
-      `http://localhost:3000/paymentsuccess?reference=${razorpay_payment_id}`
-    );
+     
+      if (updatedOrder) {
+        res.redirect(
+          `http://localhost:3000/paymentsuccess?reference=${razorpay_payment_id}`
+        );
+      } else {
 
-    console.log(razorpay_order_id);
-    console.log(razorpay_payment_id);
-    console.log(razorpay_signature);
+        res.status(404).json({ success: false, message: "Order not found" });
+      }
+    } catch (error) {
+     
+      console.error(error);
+      res
+        .status(500)
+        .json({ success: false, message: "Internal server error" });
+    }
   } else {
-    res.status(400).json({
-      success: false,
-    });
+    
+    res.status(400).json({ success: false, message: "Invalid signature" });
   }
 });
 
