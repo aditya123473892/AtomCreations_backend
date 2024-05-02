@@ -45,7 +45,7 @@ const paymentVerification = asyncHandler(async (req, res) => {
             "paymentInfo.razorpay_order_id": razorpay_order_id,
             "paymentInfo.razorpay_payment_id": razorpay_payment_id,
             "paymentInfo.razorpay_signature": razorpay_signature,
-            orderStatus: "completed", 
+            isConfirmed: true, 
           },
         },
         { new: true }

@@ -640,6 +640,11 @@ const placeOrder = asyncHandler(async (req, res) => {
         .json({ msg: "Complete all fields", success: false });
     }
 
+    if(phoneNo.length!==10){
+     throw new Error("Mobile number should be of 10 digits")
+      
+    }
+
     const productIds = orderItems.map((item) => item.product);
     console.log(productIds);
     const products = await Productdb.find({ _id: { $in: productIds } });
@@ -766,6 +771,35 @@ const getOrder = asyncHandler(async (req, res) => {
   }
 });
 
+const getAllOrders = asyncHandler(async (req, res) => {
+  // const { id } = req.user;
+  // validateMongooseId(id);
+  // const { orderId } = req.params;
+  try {
+    // const user = await Userdb.findById(id);
+    // if (!user) {
+    //   return res.status(404).json({ error: "User not found" });
+    // }
+    // if (!user.isVerified) {
+    //   return res.status(404).json({ error: "User is not verified" });
+    // }
+    // if (orderId) {
+    //   const order = await Orderdb.findById(orderId);
+    //   console.log(order);
+    //   res.json(order);
+    // } else {
+    //   res.json({
+    //     status: false,
+    //     message: "Please provide order Id",
+    //   });
+    // }
+
+     const orders = await Orderdb.find({ isConfirmed: true });
+    res.json(orders);
+  } catch (error) {
+    throw new Error(error);
+  }
+});
 const getUserOrders = asyncHandler(async (req, res) => {
   const { id } = req.user;
   validateMongooseId(id);
@@ -1297,4 +1331,5 @@ module.exports = {
   getWishlist,
   removeFromWishlist,
   confirmOrder,
+ getAllOrders
 };
