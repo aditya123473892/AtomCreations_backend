@@ -54,7 +54,7 @@ const paymentVerification = asyncHandler(async (req, res) => {
      
       if (updatedOrder) {
         res.redirect(
-          `http://localhost:3000/paymentsuccess?reference=${razorpay_payment_id}`
+          `https://atomcreations.co/paymentsuccess?reference=${razorpay_payment_id}`
         );
       } else {
 
