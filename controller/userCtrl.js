@@ -70,7 +70,7 @@ const sendOtp = asyncHandler(async (req, res) => {
 });
 
 // const sendOtp = asyncHandler(async (req, res) => {
-//   const email = req.body.email;
+//   const email = req.bfody.email;
 //   try {
 //     const findUser = await Userdb.findOne({ email: email });
 //     if (findUser) {
@@ -517,10 +517,9 @@ const removeFromCart = asyncHandler(async (req, res) => {
     user.cart = user.cart.filter(
       (item) => !(item._id.toString() === productId && item.size === size)
     );
-    
 
     await user.save();
-    const cart = user.cart
+    const cart = user.cart;
     res.json(user.cart);
   } catch (error) {
     res.status(500).json({
@@ -613,12 +612,37 @@ const placeOrder = asyncHandler(async (req, res) => {
     }
 
     const data = req.body;
-    const { address, city, phoneNo, pinCode, state, orderItems } = data;
+    const {
+      address,
+      city,
+      phoneNo,
+      pinCode,
+      state,
+      orderItems,
+      paymentMethod,
+      name,
+      email
+    } = data;
 
-    if (!address || !city || !phoneNo || !pinCode || !state || !orderItems) {
+    if (
+      !address ||
+      !city ||
+      !phoneNo ||
+      !pinCode ||
+      !state ||
+      !orderItems ||
+      !paymentMethod ||
+      !name||
+      !email
+    ) {
       return res
         .status(400)
         .json({ msg: "Complete all fields", success: false });
+    }
+
+    if(phoneNo.length!==10){
+     throw new Error("Mobile number should be of 10 digits")
+      
     }
 
     const productIds = orderItems.map((item) => item.product);
@@ -653,27 +677,6 @@ const placeOrder = asyncHandler(async (req, res) => {
       var couponValue = coupon.discount;
     }
 
-    // for (const item of orderItems) {
-    //   const product = products.find((p) => p._id.equals(item.product));
-    //   if (product) {
-    //     const quantityInStock = product.quantity;
-    //     if (quantityInStock < item.quantity) {
-    //       return res.status(400).json({
-    //         msg: `Insufficient stock for product ${product.title}`,
-    //         success: false,
-    //       });
-    //     }
-    //     product.quantity -= item.quantity;
-    //     await product.save();
-    //     // finalItems.push({
-    //     //   product: item.product,
-    //     //   quantity: item.quantity,
-    //     //   title: product.title,
-    //     //   price: product.price,
-    //     // });
-    //   }
-    // }
-
     const finalItems = orderItems.map((item, index) => ({
       product: item.product,
       quantity: item.quantity,
@@ -681,19 +684,35 @@ const placeOrder = asyncHandler(async (req, res) => {
       ProductsTitle: ProductsTitle[index],
       ProductsPrice: ProductsPrice[index],
     }));
-    const defaultPaymentInfo = {
-      paymentMethod: "COD", // Cash on Delivery
-      status: "processing",
-      itemsPrice: 0.0, // Default to 0
-      taxPrice: 0.0, // Default to 0
-      shippingPrice: 50.0, // Default to 0
-      // couponAvailable: false,
-      // couponValue: 0.0, // Default to 0
-      orderStatus: "processing",
-    };
+    if (paymentMethod === "cod") {
+      var defaultPaymentInfo = {
+        paymentMethod: "COD", // Cash on Delivery
+        status: "processing",
+        itemsPrice: 0.0, // Default to 0
+        taxPrice: 0.0, // Default to 0
+        shippingPrice: 50.0, // Default to 0
+        // couponAvailable: false,
+        // couponValue: 0.0, // Default to 0
+        orderStatus: "processing",
+      };
+    }
+    if (paymentMethod === "razorpay") {
+      var defaultPaymentInfo = {
+        paymentMethod: "razorpay", // Cash on Delivery
+        status: "processing",
+        itemsPrice: 0.0, // Default to 0
+        taxPrice: 0.0, // Default to 0
+        shippingPrice: 50.0, // Default to 0
+        // couponAvailable: false,
+        // couponValue: 0.0, // Default to 0
+        orderStatus: "processing",
+      };
+    }
+    console.log(paymentMethod);
+    console.log(defaultPaymentInfo);
     totalPrice += defaultPaymentInfo.shippingPrice;
     const newOrder = new Orderdb({
-      shippingInfo: { address, city, phoneNo, pinCode, state },
+      shippingInfo: { address, city, phoneNo, pinCode, state,name,email },
       user: user._id,
       orderItems: finalItems,
       paymentInfo: {
@@ -752,6 +771,35 @@ const getOrder = asyncHandler(async (req, res) => {
   }
 });
 
+const getAllOrders = asyncHandler(async (req, res) => {
+  // const { id } = req.user;
+  // validateMongooseId(id);
+  // const { orderId } = req.params;
+  try {
+    // const user = await Userdb.findById(id);
+    // if (!user) {
+    //   return res.status(404).json({ error: "User not found" });
+    // }
+    // if (!user.isVerified) {
+    //   return res.status(404).json({ error: "User is not verified" });
+    // }
+    // if (orderId) {
+    //   const order = await Orderdb.findById(orderId);
+    //   console.log(order);
+    //   res.json(order);
+    // } else {
+    //   res.json({
+    //     status: false,
+    //     message: "Please provide order Id",
+    //   });
+    // }
+
+     const orders = await Orderdb.find({ isConfirmed: true });
+    res.json(orders);
+  } catch (error) {
+    throw new Error(error);
+  }
+});
 const getUserOrders = asyncHandler(async (req, res) => {
   const { id } = req.user;
   validateMongooseId(id);
@@ -1078,16 +1126,15 @@ const applyCoupon = asyncHandler(async (req, res) => {
       if (!order) {
         throw new Error("Order not found");
       }
-      console.log(order.paymentInfo.couponAvailable)
+      console.log(order.paymentInfo.couponAvailable);
       if (order.paymentInfo.couponAvailable) {
         return res.json({ message: "Coupon is already applied" });
       } else {
-        
         console.log(price);
         price -= (validCoupon.discount / 100) * price;
-        console.log(price)
+        console.log(price);
         order.paymentInfo.totalPrice = price;
-        console.log(order.paymentInfo.price)
+        console.log(order.paymentInfo.price);
         order.paymentInfo.couponAvailable = true;
         order.paymentInfo.couponValue = validCoupon.discount;
         await order.save();
@@ -1284,4 +1331,5 @@ module.exports = {
   getWishlist,
   removeFromWishlist,
   confirmOrder,
+ getAllOrders
 };
