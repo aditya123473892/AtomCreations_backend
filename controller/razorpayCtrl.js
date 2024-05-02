@@ -37,6 +37,7 @@ const paymentVerification = asyncHandler(async (req, res) => {
 
   if (isAuthentic) {
     try {
+
       const updatedOrder = await Orderdb.findOneAndUpdate(
         { _id: orderId },
         {
@@ -44,33 +45,30 @@ const paymentVerification = asyncHandler(async (req, res) => {
             "paymentInfo.razorpay_order_id": razorpay_order_id,
             "paymentInfo.razorpay_payment_id": razorpay_payment_id,
             "paymentInfo.razorpay_signature": razorpay_signature,
-            orderStatus: "completed",
+            isConfirmed: true, 
           },
         },
         { new: true }
       );
 
+
       if (updatedOrder) {
-        // Check if payment was successful
-        if (updatedOrder.paymentStatus === "success") {
-          res.redirect(
-            `https://atomcreations.co/paymentsuccess?reference=${razorpay_payment_id}`
-          );
-        } else {
-          res.redirect(
-            `https://atomcreations.co/paymentfailed?reference=${razorpay_payment_id}`
-          );
-        }
+        res.redirect(
+          `https://atomcreations.co/paymentsuccess?reference=${razorpay_payment_id}`
+        );
       } else {
+
         res.status(404).json({ success: false, message: "Order not found" });
       }
     } catch (error) {
+
       console.error(error);
       res
         .status(500)
         .json({ success: false, message: "Internal server error" });
     }
   } else {
+
     res.status(400).json({ success: false, message: "Invalid signature" });
   }
 });
