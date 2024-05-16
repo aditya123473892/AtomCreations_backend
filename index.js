@@ -12,6 +12,8 @@ const productRouter = require("./routes/productRoutes");
 const categoryRouter = require("./routes/categoryRoutes");
 const couponRouter = require("./routes/couponRoutes");
 const razorpayRouter = require("./routes/razorpayRoutes");
+const upcomingRouter = require("./routes/upcomingRoutes");
+const typographyRouter = require("./routes/typographyRoutes")
 const cookieParser = require("cookie-parser");
 const morgan = require("morgan");
 
@@ -35,6 +37,10 @@ app.use(cors(corsOption));
 app.use("/api/user", authRouter);
 app.use("/api/appuser", userRouter);
 app.use("/api/products", productRouter);
+app.use("/api/upcoming", upcomingRouter);
+app.use("/api/typography", typographyRouter);
+
+
 app.use("/api/category", categoryRouter);
 app.use("/api/coupon", couponRouter);
 app.use("/api/payment", razorpayRouter);

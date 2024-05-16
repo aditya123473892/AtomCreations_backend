@@ -3,7 +3,8 @@ const Productdb = require("../models/productModel");
 const asyncHandler = require("express-async-handler");
 const slugify = require("slugify");
 const { isErrored } = require("nodemailer/lib/xoauth2");
-
+const Upcomingdb = require("../models/UpcomingDesignModel");
+const Typographydb = require("../models/TypographyModel");
 //create product
 const createProduct = asyncHandler(async (req, res) => {
   try {
@@ -75,8 +76,6 @@ const getAllProducts = asyncHandler(async (req, res) => {
       const productCount = await Productdb.countDocuments();
       if (skip >= productCount) throw new Error("This Page doesn't exists");
     }
-    ;
-
     const products = await query;
     res.json(products);
   } catch (error) {
@@ -114,7 +113,7 @@ const deleteProduct = asyncHandler(async (req, res) => {
 
 const addToWishlist = asyncHandler(async (req, res) => {
   const { id } = req.user;
-  console.log(id)
+  console.log(id);
   const { productId } = req.body;
 
   try {
@@ -191,7 +190,7 @@ const rating = asyncHandler(async (req, res) => {
     let ratingSum = getAllratings.ratings
       .map((item) => item.star)
       .reduce((prev, curr) => prev + curr, 0);
-      //average of all the ratings
+    //average of all the ratings
     let actualrating = Math.round(ratingSum / totalRating);
     let finalproduct = await Productdb.findByIdAndUpdate(
       productId,
@@ -205,6 +204,55 @@ const rating = asyncHandler(async (req, res) => {
     throw new Error(error);
   }
 });
+
+//upcoming routes
+const createUpcomingProduct = asyncHandler(async (req, res) => {
+  try {
+    const newUpcoming = await Upcomingdb.create(req.body);
+    res.json(newUpcoming);
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+const getUpcomingProd = asyncHandler(async (req, res) => {
+  try {
+    const upcomingProds = await Upcomingdb.find();
+    console.log("Fetched Upcoming Products:", upcomingProds); 
+    res.json(upcomingProds);
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
+//typography
+// const createTypography = asyncHandler(async (req, res) => {
+//   try {
+//     const typography = await Typographydb.create(req.body);
+//     res.json(typography);
+//   } catch (error) {
+//     throw new Error(error);
+//   }
+// });
+const createTypography  = asyncHandler(async (req, res) => {
+  try {
+    if (req.body.title) {
+      req.body.slug = slugify(req.body.title);
+    }
+    const typography = await Typographydb.create(req.body);
+    res.json(typography);
+  } catch (err) {
+    throw new Error(err);
+  }
+});
+const getTypography = asyncHandler(async (req, res) => {
+  try {
+    const typography = await Typographydb.find();
+    res.json(typography);
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
 module.exports = {
   createProduct,
   getProduct,
@@ -213,4 +261,8 @@ module.exports = {
   deleteProduct,
   addToWishlist,
   rating,
+  createUpcomingProduct,
+  getUpcomingProd,
+  createTypography,
+  getTypography
 };
