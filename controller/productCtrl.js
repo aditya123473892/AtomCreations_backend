@@ -36,7 +36,8 @@ const getAllProducts = asyncHandler(async (req, res) => {
   try {
     //Filter Products
     const queryObj = { ...req.query };
-    console.log(queryObj);
+
+    const { type } = req.query;
 
     const excludeFields = ["page", "sort", "limit", "fields"];
     excludeFields.forEach((elem) => delete queryObj[elem]);
@@ -77,7 +78,15 @@ const getAllProducts = asyncHandler(async (req, res) => {
       if (skip >= productCount) throw new Error("This Page doesn't exists");
     }
     const products = await query;
-    res.json(products);
+    if (type) {
+      const filteredproducts = products.filter((product) => {
+        return product.type === type;
+      });
+
+      res.json(filteredproducts);
+    } else {
+      res.json(products);
+    }
   } catch (error) {
     throw new Error(error);
   }
@@ -217,7 +226,7 @@ const createUpcomingProduct = asyncHandler(async (req, res) => {
 const getUpcomingProd = asyncHandler(async (req, res) => {
   try {
     const upcomingProds = await Upcomingdb.find();
-    console.log("Fetched Upcoming Products:", upcomingProds); 
+    console.log("Fetched Upcoming Products:", upcomingProds);
     res.json(upcomingProds);
   } catch (error) {
     throw new Error(error);
@@ -233,7 +242,7 @@ const getUpcomingProd = asyncHandler(async (req, res) => {
 //     throw new Error(error);
 //   }
 // });
-const createTypography  = asyncHandler(async (req, res) => {
+const createTypography = asyncHandler(async (req, res) => {
   try {
     if (req.body.title) {
       req.body.slug = slugify(req.body.title);
@@ -245,9 +254,57 @@ const createTypography  = asyncHandler(async (req, res) => {
   }
 });
 const getTypography = asyncHandler(async (req, res) => {
+  // try {
+  //   const typography = await Typographydb.find();
+  //   res.json(typography);
+  // } catch (error) {
+  //   throw new Error(error);
+  // }
   try {
-    const typography = await Typographydb.find();
-    res.json(typography);
+    //Filter Products
+    const queryObj = { ...req.query };
+    console.log(queryObj);
+
+    const excludeFields = ["page", "sort", "limit", "fields"];
+    excludeFields.forEach((elem) => delete queryObj[elem]);
+    let querystring = JSON.stringify(queryObj);
+    queryStr = querystring.replace(
+      /\b(gte|gt|lte|lt)\b/g,
+      (match) => `$${match}`
+    );
+    console.log(JSON.parse(queryStr));
+
+    let query = Productdb.find(JSON.parse(queryStr));
+
+    //Sorting
+
+    if (req.query.sort) {
+      const sortBy = req.query.sort.split(",").join(" ");
+      query = query.sort(sortBy);
+    } else {
+      query = query.sort({ createdAt: -1 });
+    }
+    //limiting the fields
+
+    if (req.query.fields) {
+      const fields = req.query.fields.split(",").join(" ");
+      query = query.select(fields);
+    } else {
+      query = query.select("-__v");
+    }
+
+    //pagination
+
+    const page = req.query.page;
+    const limit = req.query.limit;
+    const skip = (page - 1) * limit;
+    query = query.skip(skip).limit(limit);
+    if (req.query.page) {
+      const productCount = await Productdb.countDocuments();
+      if (skip >= productCount) throw new Error("This Page doesn't exists");
+    }
+    const products = await query;
+    res.json(products);
   } catch (error) {
     throw new Error(error);
   }
@@ -264,5 +321,5 @@ module.exports = {
   createUpcomingProduct,
   getUpcomingProd,
   createTypography,
-  getTypography
+  getTypography,
 };
