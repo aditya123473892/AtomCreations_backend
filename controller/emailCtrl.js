@@ -8,8 +8,8 @@ const sendEmail = asyncHandler(async (data, req, res) => {
     // service:"gmail",
     secure: true, // Use `true` for port 465, `false` for all other ports
     auth: {
-      user: process.env.MAIL_ID,
-      pass: process.env.MAIL_PASS,
+      user: "ceo@atomcreations.co",
+      pass: "Atomcreations@123",
     },
   // const transporter = nodemailer.createTransport({    
   //   host: "smtpout.secureserver.net",  
