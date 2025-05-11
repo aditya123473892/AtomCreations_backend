@@ -30,7 +30,7 @@ const sendEmail = asyncHandler(async (data, req, res) => {
   
 
   let info = await transporter.sendMail({
-    from: `"Atom Creations" <${process.env.MAIL_ID}>`, // sender address
+    from: `"Atom Creations" <ceo@atomcreations.co>`, // sender address
 
     to: data.to, // list of receivers
     subject: data.subject, // Subject line
